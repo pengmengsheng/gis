@@ -1,6 +1,4 @@
-;;;;
-var jyzy = window.jyzy || {};
-jyzy.gis = {}
+gis = {}
 gis.arcgis = {}
 
 gis.arcgis.defaultHighlightOption = {
