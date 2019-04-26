@@ -1,19 +1,18 @@
+;
+gis= window.gis.|{};
+gis.geoserver = window.gis.geoserver||{};
 
-var jyzy = window.jyzy || {};
-jyzy.gis = window.jyzy.gis||{};
-jyzy.gis.geoserver = window.jyzy.gis.geoserver||{};
-
-jyzy.gis.geoserver._map = null;
-jyzy.gis.geoserver._layerList;
-jyzy.gis.geoserver.baseUrl;
-jyzy.gis.geoserver.vectorSource;
-jyzy.gis.geoserver._select = null;
-jyzy.gis.geoserver._selectable = false; 
-jyzy.gis.geoserver.selectLayer = null;
-jyzy.gis.geoserver.selectLayerTypeName = null;
-jyzy.gis.geoserver.selectedStyle = null;
-jyzy.gis.geoserver._selectedId =[];
-jyzy.gis.geoserver.resourceFid = null;
+gis.geoserver._map = null;
+gis.geoserver._layerList;
+gis.geoserver.baseUrl;
+gis.geoserver.vectorSource;
+gis.geoserver._select = null;
+gis.geoserver._selectable = false; 
+gis.geoserver.selectLayer = null;
+gis.geoserver.selectLayerTypeName = null;
+gis.geoserver.selectedStyle = null;
+gis.geoserver._selectedId =[];
+gis.geoserver.resourceFid = null;
 
 /**
  * @param param.url:url,
@@ -23,13 +22,13 @@ jyzy.gis.geoserver.resourceFid = null;
  * @param param.targetId:divId,
  * @param param.select:true/false
  */
-jyzy.gis.geoserver.initMap = function(param){
+gis.geoserver.initMap = function(param){
 	let bounds = [41557768.720,4569866.496,41571916.443,4577111.040];
-	let layers = jyzy.gis.geoserver._initMapLayers(param);
-	let view = jyzy.gis.geoserver._initMapView(param);
-	let controls = jyzy.gis.geoserver._controls();
+	let layers = gis.geoserver._initMapLayers(param);
+	let view = gis.geoserver._initMapView(param);
+	let controls = gis.geoserver._controls();
 	
-	jyzy.gis.geoserver.resourceFid = param.fid;
+	gis.geoserver.resourceFid = param.fid;
 	
 	let map = new ol.Map({
 		controls: controls,
@@ -38,9 +37,9 @@ jyzy.gis.geoserver.initMap = function(param){
 		view:view
 		});
 	
-	jyzy.gis.geoserver._map = map;
-	jyzy.gis.geoserver._layerList = param.layers;
-	jyzy.gis.geoserver.baseUrl = param.url;
+	gis.geoserver._map = map;
+	gis.geoserver._layerList = param.layers;
+	gis.geoserver.baseUrl = param.url;
 	
 	
 	map.getView().fit(bounds,map.getSize());
@@ -53,7 +52,7 @@ jyzy.gis.geoserver.initMap = function(param){
 		})
 	});
 	
-	jyzy.gis.geoserver.selectedStyle = style;
+	gis.geoserver.selectedStyle = style;
 	
 	let selectSingleClick = new ol.interaction.Select({style:style,condition:ol.events.condition.click});
 	
@@ -65,19 +64,19 @@ jyzy.gis.geoserver.initMap = function(param){
       })
 	
 	document.onkeydown = function(ev) {
-		if(!jyzy.gis.geoserver._selectable) return;
+		if(!gis.geoserver._selectable) return;
 		
 	    var ev = ev || event;
 	    var select = ev.ctrlKey == true?selectCtrlClick:selectSingleClick;
-	    jyzy.gis.geoserver._addSelectInteraction(select);
+	    gis.geoserver._addSelectInteraction(select);
 	    
 	}
 	
-	jyzy.gis.geoserver._selectable = param.select;
+	gis.geoserver._selectable = param.select;
 	if(param.select){
-		jyzy.gis.geoserver._addSelectInteraction(selectSingleClick);
-		jyzy.gis.geoserver._select.on('select', function(e) {
-			jyzy.gis.geoserver._selected(e);
+		gis.geoserver._addSelectInteraction(selectSingleClick);
+		gis.geoserver._select.on('select', function(e) {
+			gis.geoserver._selected(e);
 		});
 	}
 	
@@ -97,7 +96,7 @@ jyzy.gis.geoserver.initMap = function(param){
 } 
 
 
-jyzy.gis.geoserver._initMapView = function(param){
+gis.geoserver._initMapView = function(param){
 	let projection = new ol.proj.Projection({
         //code: 'EPSG:4610',
         units: 'degrees',
@@ -115,18 +114,18 @@ jyzy.gis.geoserver._initMapView = function(param){
 };
 
 
-jyzy.gis.geoserver._initMapLayers = function(param){
+gis.geoserver._initMapLayers = function(param){
 	let ls = [];
 	let layers = param.layers;
 	for(let l of layers){
-		ls.push(jyzy.gis.geoserver._setLayer(param.url,l));
+		ls.push(gis.geoserver._setLayer(param.url,l));
 	}
 	return ls;
 }
 /**
  * map controls
  */
-jyzy.gis.geoserver._controls = function(){
+gis.geoserver._controls = function(){
 	return new ol.control.defaults({
 		attribution: false,
 		zoom:false
@@ -144,7 +143,7 @@ jyzy.gis.geoserver._controls = function(){
 /**
  * add map Layer
  */
-jyzy.gis.geoserver._setLayer = function(baseUrl,layer){
+gis.geoserver._setLayer = function(baseUrl,layer){
 	baseUrl += '/'+layer.WORKSPACE;
 	let format = 'image/'+layer.FORMAT;
 	let typeName = layer.WORKSPACE+':'+layer.LAYER;
@@ -165,15 +164,15 @@ jyzy.gis.geoserver._setLayer = function(baseUrl,layer){
 	if(layer.CATEGORY == 'tile'){
 		baseUrl += "/wms";
 		param.url = baseUrl;
-		return jyzy.gis.geoserver._setTileLayer(param);
+		return gis.geoserver._setTileLayer(param);
 	}else if(layer.CATEGORY == 'image') {
 		baseUrl += "/wms";
 		param.url = baseUrl;
-		return jyzy.gis.geoserver._setImageLayer(param);
+		return gis.geoserver._setImageLayer(param);
 	}else{
 		param.url = baseUrl;
-		let vectorLayer = jyzy.gis.geoserver._setVectorLayer(param);
-		jyzy.gis.geoserver.selectLayer = vectorLayer;
+		let vectorLayer = gis.geoserver._setVectorLayer(param);
+		gis.geoserver.selectLayer = vectorLayer;
 		return vectorLayer;
 	}
 	return null;
@@ -183,7 +182,7 @@ jyzy.gis.geoserver._setLayer = function(baseUrl,layer){
 /**
  * add TileLayer
  */
-jyzy.gis.geoserver._setTileLayer = function(param){
+gis.geoserver._setTileLayer = function(param){
 	return new ol.layer.Tile({
 		visible: param.visible,
 		source: new ol.source.TileWMS({
@@ -204,7 +203,7 @@ jyzy.gis.geoserver._setTileLayer = function(param){
 /**
  * add ImageLayer
  */
-jyzy.gis.geoserver._setImageLayer = function(param){
+gis.geoserver._setImageLayer = function(param){
 	return new ol.layer.Image({
 		source: new ol.source.ImageWMS({
 			ratio: 1,
@@ -225,8 +224,8 @@ jyzy.gis.geoserver._setImageLayer = function(param){
 /**
  * add VectorLayer
  */
-jyzy.gis.geoserver._setVectorLayer = function(param){
-	jyzy.gis.geoserver.selectLayerTypeName = param.typeName;
+gis.geoserver._setVectorLayer = function(param){
+	gis.geoserver.selectLayerTypeName = param.typeName;
 	
 	let wfsParams = {    
 			service : 'WFS',    
@@ -256,9 +255,9 @@ jyzy.gis.geoserver._setVectorLayer = function(param){
 	  //回调函数使用  
     window.loadFeatures = function(response) {    
         vectorSource.addFeatures((new ol.format.GeoJSON()).readFeatures(response));  //载入要素  
-        let fid = jyzy.gis.geoserver.resourceFid;
-        jyzy.gis.geoserver.locationByFeatureId(fid);
-        jyzy.gis.geoserver.resourceFid = null;
+        let fid = gis.geoserver.resourceFid;
+        gis.geoserver.locationByFeatureId(fid);
+        gis.geoserver.resourceFid = null;
             
     };
 	return new ol.layer.Vector({
@@ -271,23 +270,23 @@ jyzy.gis.geoserver._setVectorLayer = function(param){
  * @param param.resource 资源 building/land
  * @param param.category 资源状态 working/current/history
  */
-jyzy.gis.geoserver.setSelectLayer = function(param){
-	jyzy.gis.geoserver.clearMapViewFitByFeature();
-	for(let l of jyzy.gis.geoserver._layerList){
+gis.geoserver.setSelectLayer = function(param){
+	gis.geoserver.clearMapViewFitByFeature();
+	for(let l of gis.geoserver._layerList){
 		if(l.FEATURE_ID != param.resource || l.FEATURE_CATEGORY != param.category) continue;
 		
 		let typeName = l.WORKSPACE + ':' + l.LAYER;
-		if(typeName == jyzy.gis.geoserver.selectLayerTypeName) continue;
+		if(typeName == gis.geoserver.selectLayerTypeName) continue;
 		
-		let layer = jyzy.gis.geoserver._setVectorLayer({url:jyzy.gis.geoserver.baseUrl,version:l.VERSION,typeName:typeName});
+		let layer = gis.geoserver._setVectorLayer({url:gis.geoserver.baseUrl,version:l.VERSION,typeName:typeName});
 		
-		let selectLayer = jyzy.gis.geoserver.selectLayer;
+		let selectLayer = gis.geoserver.selectLayer;
 		if(layer == selectLayer) break;
 		
-		if(selectLayer) jyzy.gis.geoserver._map.removeLayer(selectLayer);
+		if(selectLayer) gis.geoserver._map.removeLayer(selectLayer);
 		
-		jyzy.gis.geoserver._map.addLayer(layer);
-		jyzy.gis.geoserver.selectLayer = layer;
+		gis.geoserver._map.addLayer(layer);
+		gis.geoserver.selectLayer = layer;
 		
 		break;
 	}
@@ -295,102 +294,102 @@ jyzy.gis.geoserver.setSelectLayer = function(param){
 /**
  * 改变select对象
  */
-jyzy.gis.geoserver._addSelectInteraction = function(select){
-	if(jyzy.gis.geoserver._select == select) return;
+gis.geoserver._addSelectInteraction = function(select){
+	if(gis.geoserver._select == select) return;
 	
-	jyzy.gis.geoserver._select = select;
+	gis.geoserver._select = select;
 	
-	jyzy.gis.geoserver._map.removeInteraction(select);
-	jyzy.gis.geoserver._map.addInteraction(select);
+	gis.geoserver._map.removeInteraction(select);
+	gis.geoserver._map.addInteraction(select);
 	
 }
 /**
  * 设置要素是否可选
  */
-jyzy.gis.geoserver.setSelectable = function(boolean){
-	jyzy.gis.geoserver._selectable = boolean;
-	let select = jyzy.gis.geoserver._select;
-	if(!boolean && select != null) jyzy.gis.geoserver._map.removeInteraction(select);
+gis.geoserver.setSelectable = function(boolean){
+	gis.geoserver._selectable = boolean;
+	let select = gis.geoserver._select;
+	if(!boolean && select != null) gis.geoserver._map.removeInteraction(select);
 }
 /**
  * 选中要素函数
  */
-jyzy.gis.geoserver._selected = function(e){
+gis.geoserver._selected = function(e){
 	let selected = e.selected;
 	if(!event.shiftKey) {
-		jyzy.gis.geoserver.clearMapViewFitByFeature();
+		gis.geoserver.clearMapViewFitByFeature();
 		
 	}
 	for(let select of selected){
 		let id = select.i;
-		if(!jyzy.gis.geoserver._selectedId.includes(id)){
-			let feature = jyzy.gis.geoserver.getFeatureById(id);
+		if(!gis.geoserver._selectedId.includes(id)){
+			let feature = gis.geoserver.getFeatureById(id);
 			
-			jyzy.gis.geoserver._selectedId.push(id);
-			jyzy.gis.geoserver.mapViewFitByFeature();
+			gis.geoserver._selectedId.push(id);
+			gis.geoserver.mapViewFitByFeature();
 		}
 	}
 }
 
-jyzy.gis.geoserver.clearMapViewFitByFeature = function(){
-	for(let fid of jyzy.gis.geoserver._selectedId){
-		let feature = jyzy.gis.geoserver.getFeatureById(fid);
+gis.geoserver.clearMapViewFitByFeature = function(){
+	for(let fid of gis.geoserver._selectedId){
+		let feature = gis.geoserver.getFeatureById(fid);
 		if (feature==null) continue;
 		feature.setStyle(null);
 	}
-	jyzy.gis.geoserver._selectedId = [];
+	gis.geoserver._selectedId = [];
 }
 
 
 /**
  * 获取选中图层要素Id数组
  */
-jyzy.gis.geoserver.getSelectedFeatureId = function(){
-	return jyzy.gis.geoserver._selectedId;
+gis.geoserver.getSelectedFeatureId = function(){
+	return gis.geoserver._selectedId;
 }
 /**
  * 通过id获取Feature
  */
-jyzy.gis.geoserver.getFeatureById = function(id){
+gis.geoserver.getFeatureById = function(id){
 	if(id=='') return null;
-	return jyzy.gis.geoserver.selectLayer.getSource().getFeatureById(id);
+	return gis.geoserver.selectLayer.getSource().getFeatureById(id);
 }
 
 /**
  * 通过要素Id定位地图
  */
-jyzy.gis.geoserver.locationByFeatureId = function(fid){
+gis.geoserver.locationByFeatureId = function(fid){
 	if(fid == ''|| fid == null) return;
 	let fs = fid.split(',');
-	jyzy.gis.geoserver._selectedId=[];
+	gis.geoserver._selectedId=[];
 	
 	for(let id of fs){
-		var feature = jyzy.gis.geoserver.getFeatureById(id);
+		var feature = gis.geoserver.getFeatureById(id);
 		if(feature == null) continue;
 		
-		jyzy.gis.geoserver._selectedId.push(id);
+		gis.geoserver._selectedId.push(id);
 	}
-    jyzy.gis.geoserver.mapViewFitByFeature();
+    gis.geoserver.mapViewFitByFeature();
 	
 }
 
 /**
  * 移动feature到屏幕中央
  */
-jyzy.gis.geoserver.mapViewFitByFeature = function(){
-	let fids = jyzy.gis.geoserver._selectedId.toString();
-	let feature = jyzy.gis.geoserver.getFeatureById(fids);
+gis.geoserver.mapViewFitByFeature = function(){
+	let fids = gis.geoserver._selectedId.toString();
+	let feature = gis.geoserver.getFeatureById(fids);
 	if(feature == null) return;
-	let map = jyzy.gis.geoserver._map;
+	let map = gis.geoserver._map;
 	let option = {
 			duration:10,//ms
 			maxZoom:2
 			};
-	feature.setStyle(jyzy.gis.geoserver.selectedStyle);
+	feature.setStyle(gis.geoserver.selectedStyle);
 	map.getView().fit(feature.getGeometry(),map.getSize(),option);
 }
-jyzy.gis.geoserver.exportMap = function(){
-	let map = jyzy.gis.geoserver._map;
+gis.geoserver.exportMap = function(){
+	let map = gis.geoserver._map;
 	map.once('rendercomplete', function(event) {
 	      var canvas = event.context.canvas;
 	      if (navigator.msSaveBlob) {
