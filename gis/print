@@ -1,0 +1,4 @@
+use geoserver export many layers before you can create layergroup then 
+
+config send request parameters
+http://localhost:8081/geoserver/bx/wms?service=WMS&version=1.1.0&request=GetMap&layers=bx%3Alandmap&bbox=41567156.598,4574158.296,41567354.529,4574403.217&width=330&height=768&srs=EPSG%3A404000&format=application/openlayers
