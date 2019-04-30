@@ -1,5 +1,5 @@
-;
-gis= window.gis.|{};
+
+var gis = window.gis||{};
 gis.geoserver = window.gis.geoserver||{};
 
 gis.geoserver._map = null;
@@ -11,7 +11,7 @@ gis.geoserver._selectable = false;
 gis.geoserver.selectLayer = null;
 gis.geoserver.selectLayerTypeName = null;
 gis.geoserver.selectedStyle = null;
-gis.geoserver._selectedId =[];
+gis.geoserver._selectedFeature =[];
 gis.geoserver.resourceFid = null;
 
 /**
@@ -23,7 +23,7 @@ gis.geoserver.resourceFid = null;
  * @param param.select:true/false
  */
 gis.geoserver.initMap = function(param){
-	let bounds = [41557768.720,4569866.496,41571916.443,4577111.040];
+	let bounds = [41551533.95276423,4540086.920647428,41576729.93486762,4598724.84263349];
 	let layers = gis.geoserver._initMapLayers(param);
 	let view = gis.geoserver._initMapView(param);
 	let controls = gis.geoserver._controls();
@@ -32,8 +32,8 @@ gis.geoserver.initMap = function(param){
 	
 	let map = new ol.Map({
 		controls: controls,
-		target:param.targetId,
 		layers:layers,
+		target:param.targetId,
 		view:view
 		});
 	
@@ -41,14 +41,11 @@ gis.geoserver.initMap = function(param){
 	gis.geoserver._layerList = param.layers;
 	gis.geoserver.baseUrl = param.url;
 	
-	
-	map.getView().fit(bounds,map.getSize());
-	
 	let style = new ol.style.Style({
-		fill:new ol.style.Fill({color:'#f50a0a66'}),
+		//fill:new ol.style.Fill({color:'#f50a0a66'}),
 		stroke:new ol.style.Stroke({
-			color:'blue',
-			width:3
+			color:'red',
+			width:5
 		})
 	});
 	
@@ -80,7 +77,7 @@ gis.geoserver.initMap = function(param){
 		});
 	}
 	
-	parent.document.getElementById('exportMap').addEventListener('click', function() {
+/*	parent.document.getElementById('exportMap').addEventListener('click', function() {
         map.once('postcompose', function(event) {
           var canvas = event.context.canvas;
           if (navigator.msSaveBlob) {
@@ -92,23 +89,41 @@ gis.geoserver.initMap = function(param){
           }
         });
         map.renderSync();
-      });
+      });*/
 } 
 
+/**
+ * map controls
+ */
+gis.geoserver._controls = function(){
+	return new ol.control.defaults().extend([
+        new ol.control.FullScreen({tipLabel:'全屏'}),//全屏控件
+        //new ol.control.MousePosition(),//鼠标位置控件
+        new ol.control.OverviewMap({tipLabel:'缩略图'}),//缩略图控件
+        new ol.control.ScaleLine({minWidth:80}),//比例尺
+        //new ol.control.ZoomSlider(),//滚动条控件
+        new ol.control.ZoomToExtent(),//缩放到范围控件
+        new ol.control.Zoom({zoomInTipLabel:'放大',zoomOutTipLabel:'缩小'}),//缩放控件
+        //new ol.control.Attribution()//属性控件
+    ])
+};
 
 gis.geoserver._initMapView = function(param){
 	let projection = new ol.proj.Projection({
-        //code: 'EPSG:4610',
-        units: 'degrees',
+        code: 'EPSG:2365',
+        units:  'm',
+        //修改坐标系和单位时以下必填否则导致比例尺错误
+        getPointResolution: function(resolution) {
+            return resolution;
+          },
         axisOrientation: 'neu',
         global: true
     });
 	let view = new ol.View({
 		projection:projection,
+		center:[41571533.95276423,4542086.920647428],
+		zoom:10,
 		});
-	
-	if(param.zoom) view.zoom = param.zoom;
-	if(param.center) view.center = param.center;
 	
 	return view;
 };
@@ -122,24 +137,7 @@ gis.geoserver._initMapLayers = function(param){
 	}
 	return ls;
 }
-/**
- * map controls
- */
-gis.geoserver._controls = function(){
-	return new ol.control.defaults({
-		attribution: false,
-		zoom:false
-	}).extend([
-        new ol.control.FullScreen({tipLabel:'全屏'}),//全屏控件
-        //new ol.control.MousePosition(),//鼠标位置控件
-        new ol.control.OverviewMap({tipLabel:'缩略图'}),//缩略图控件
-        new ol.control.ScaleLine({minWidth:80}),//比例尺
-        //new ol.control.ZoomSlider(),//滚动条控件
-        //new ol.control.ZoomToExtent(),//缩放到范围控件
-        new ol.control.Zoom({zoomInTipLabel:'放大',zoomOutTipLabel:'缩小'}),//缩放控件
-        //new ol.control.Attribution()//属性控件
-    ])
-};
+
 /**
  * add map Layer
  */
@@ -215,6 +213,8 @@ gis.geoserver._setImageLayer = function(param){
 				'LAYERS': param.typeName,
 				'exceptions': 'application/vnd.ogc.se_inimage',
 			},
+			//serverType: 'geoserver',
+            projection: "EPSG:2365",
 			crossOrigin: 'anonymous'
 		})
 	});
@@ -260,6 +260,7 @@ gis.geoserver._setVectorLayer = function(param){
         gis.geoserver.resourceFid = null;
             
     };
+    gis.geoserver.vectorSource = vectorSource;
 	return new ol.layer.Vector({
 		source: vectorSource,
 		visible:param.visible,
@@ -322,30 +323,35 @@ gis.geoserver._selected = function(e){
 	}
 	for(let select of selected){
 		let id = select.i;
-		if(!gis.geoserver._selectedId.includes(id)){
-			let feature = gis.geoserver.getFeatureById(id);
+		let extent = select.U.geometry.A;
+		let feature = {
+				fid:id,
+				extent:extent
+		};
+		if(!gis.geoserver._selectedFeature.includes(feature)){
 			
-			gis.geoserver._selectedId.push(id);
+			gis.geoserver._selectedFeature.push(feature);
 			gis.geoserver.mapViewFitByFeature();
 		}
 	}
 }
 
 gis.geoserver.clearMapViewFitByFeature = function(){
-	for(let fid of gis.geoserver._selectedId){
-		let feature = gis.geoserver.getFeatureById(fid);
+	
+	for(let f of gis.geoserver._selectedFeature){
+		let feature = gis.geoserver.getFeatureById(f.fid);
 		if (feature==null) continue;
 		feature.setStyle(null);
 	}
-	gis.geoserver._selectedId = [];
+	gis.geoserver._selectedFeature = [];
 }
 
 
 /**
  * 获取选中图层要素Id数组
  */
-gis.geoserver.getSelectedFeatureId = function(){
-	return gis.geoserver._selectedId;
+gis.geoserver.getSelectedFeature = function(){
+	return gis.geoserver._selectedFeature;
 }
 /**
  * 通过id获取Feature
@@ -361,13 +367,16 @@ gis.geoserver.getFeatureById = function(id){
 gis.geoserver.locationByFeatureId = function(fid){
 	if(fid == ''|| fid == null) return;
 	let fs = fid.split(',');
-	gis.geoserver._selectedId=[];
+	gis.geoserver._selectedFeature=[];
 	
 	for(let id of fs){
 		var feature = gis.geoserver.getFeatureById(id);
 		if(feature == null) continue;
-		
-		gis.geoserver._selectedId.push(id);
+		let f = {
+				fid:id,
+				extent:[]
+		};
+		gis.geoserver._selectedFeature.push(f);
 	}
     gis.geoserver.mapViewFitByFeature();
 	
@@ -377,28 +386,29 @@ gis.geoserver.locationByFeatureId = function(fid){
  * 移动feature到屏幕中央
  */
 gis.geoserver.mapViewFitByFeature = function(){
-	let fids = gis.geoserver._selectedId.toString();
-	let feature = gis.geoserver.getFeatureById(fids);
-	if(feature == null) return;
-	let map = gis.geoserver._map;
-	let option = {
-			duration:10,//ms
-			maxZoom:2
-			};
-	feature.setStyle(gis.geoserver.selectedStyle);
-	map.getView().fit(feature.getGeometry(),map.getSize(),option);
+	for(let f of gis.geoserver._selectedFeature){
+		let fids = f.fid;
+		let feature = gis.geoserver.getFeatureById(fids);
+		if(feature == null) return;
+		let map = gis.geoserver._map;
+		let option = {
+				duration:10,//ms
+				maxZoom:2
+		};
+		feature.setStyle(gis.geoserver.selectedStyle);
+		map.getView().fit(feature.getGeometry(),map.getSize(),option);
+	}
+		
 }
-gis.geoserver.exportMap = function(){
-	let map = gis.geoserver._map;
-	map.once('rendercomplete', function(event) {
-	      var canvas = event.context.canvas;
-	      if (navigator.msSaveBlob) {
-	        navigator.msSaveBlob(canvas.msToBlob(), 'map.png');
-	      } else {
-	        canvas.toBlob(function(blob) {
-	          saveAs(blob, 'map.png');
-	        });
-	      }
-	    });
-	    map.renderSync();
+
+gis.geoserver.locationResource = function(gucode,resourceName,category,curpath){
+	gis.geoserver.setSelectLayer({resource:resourceName,category:category});
+	
+	const url = curpath +'/jyzy/dataobject/data/dataname-jyzy_common_geoserver_feature_resource';
+	$.get(url,{resourceGucode:gucode,resourceName:resourceName},function(d){
+		d = JSON.parse(d);
+		for(let f of d.rows){
+			gis.geoserver.locationByFeatureId(f.FID );
+		}
+	});
 }
